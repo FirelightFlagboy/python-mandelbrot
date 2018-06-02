@@ -41,6 +41,6 @@ class Display():
 		""" listen the event and use given handler """
 		while True:
 			for event in pygame.event.get():
-				if eventHandler(event.type) == True:
+				if eventHandler(event.type, event) == True:
 					return True
 			sleep(0.05)
