@@ -101,9 +101,9 @@ def handleMouse(button):
 		return
 
 	if button == 1:
-		zoom += 1.25
+		zoom *= 1.1
 	elif button == 3:
-		zoom -= 1.25
+		zoom /= 1.1
 
 	print('zoom', zoom)
 	coord_set['x1'] /= zoom
