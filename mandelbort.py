@@ -1,4 +1,5 @@
 import pygame
+from display import Display
 
 # windows parameters
 HEIGTH = 360
@@ -31,13 +32,18 @@ def getIter(x, y):
 			break
 	return (i)
 
-def main():
-	pygame.init()
-	pygame.display.set_mode(SIZE)
-	pygame.display.flip()
+def eventHandler(type_event):
+	if type_event is pygame.QUIT:
+		print('here')
+		return True
 
-	surface = pygame.Surface(SIZE)
-	ar = pygame.PixelArray(surface)
+def main():
+	display = Display(WIDTH, HEIGTH)
+
+	display.initSurface()
+
+	ar = display.getPixelArray()
+
 	for c in range(HEIGTH):
 		for r in range(WIDTH):
 			iteration = getIter(r, c)
@@ -45,20 +51,12 @@ def main():
 			ar[r, c] = brigth, brigth, brigth
 		print('\r', c * 100 / HEIGTH, end='')
 	print('\r', c * 100 / HEIGTH, '\tdone')
+
 	del ar
 
-	screen = pygame.display.get_surface()
-	screen.fill((255, 255, 255))
-	screen.blit(surface, (0, 0))
-	pygame.display.flip()
+	display.blitSurface()
 
-	run = True
-	while run:
-		for event in pygame.event.get():
-			type_event = event.type
-			if type_event is pygame.QUIT:
-				run = False
-
+	display.listenEvent(eventHandler)
 
 if __name__ == '__main__':
 	main()
