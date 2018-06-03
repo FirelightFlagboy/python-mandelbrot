@@ -1,5 +1,7 @@
 import pygame
 from display import Display
+from time import process_time
+from numba import jit
 
 # windows parameters
 HEIGTH = 360
@@ -32,32 +34,33 @@ display = Display(WIDTH, HEIGTH)
 
 
 def getIter(x, y):
-	Cr = coord_set['width'] * x / WIDTH + coord_set['x1'] - 0.5
+	Cr = coord_set['width'] * x / WIDTH + coord_set['x1']
 	Ci = coord_set['heigth'] * y / HEIGTH + coord_set['y1']
 
-	aa, bb, a, b = 0.0, 0.0, Cr, Ci
+	real, img, Tr, Ti = Cr, Ci, 0.0, 0.0
 	for i in range(max_iter):
-		aa = a * a - b * b
-		bb = 2.0 * a * b
-		a = aa + Cr
-		b = bb + Ci
-		if abs(a + b) > INFINI:
+		Tr = real * real
+		Ti = img * img
+		if Tr + Ti > INFINI:
 			break
+		img, real = 2.0 * real * img + Ci, Tr - Ti + Cr
 	return (i)
 
 
 def draw():
+
 	ar = display.getPixelArray()
+	start = process_time()
 	for c in range(HEIGTH):
 		for r in range(WIDTH):
 			iteration = getIter(r, c)
-			brigth = (iteration / max_iter) * 255
 			if iteration is max_iter:
 				ar[r, c] = 0xffffff
 			else:
-				ar[r, c] = 0, 0, 255 - brigth
+				ar[r, c] = 0, 0, 255 - (iteration / max_iter) * 255
 		print('\r', round(c * 100 / HEIGTH), '%', end='')
-	print('\r', round(c * 100 / HEIGTH), '%\tdone')
+	end = process_time()
+	print('\r', round(c * 100 / HEIGTH), '%\tdone in ', end - start)
 
 	del ar
 
