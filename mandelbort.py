@@ -2,6 +2,7 @@ import pygame
 from display import Display
 from time import process_time
 import numpy
+import numexpr
 from numba import jit
 
 # windows parameters
@@ -54,13 +55,23 @@ display = Display(WIDTH, HEIGTH)
 # 			pxa[i, j] = mandelbrot_cal(x_line[i] + 1j * y_line[j])
 # 	return x_line, y_line, pxa
 
+# def mandelbrot_cal(c):
+# 	output = numpy.zeros(c.shape)
+# 	z = numpy.zeros(c.shape, numpy.complex64)
+# 	for n in range(max_iter):
+# 		small = numpy.less(z.real * z.real + z.imag * z.imag, 4.0)
+# 		output[small] = n
+# 		z[small] = z[small] * z[small] + c[small]
+# 	output[output == max_iter - 1] = 0
+# 	return output
+
 def mandelbrot_cal(c):
 	output = numpy.zeros(c.shape)
 	z = numpy.zeros(c.shape, numpy.complex64)
 	for n in range(max_iter):
-		small = numpy.less(z.real * z.real + z.imag * z.imag, 4.0)
+		small = numexpr.evaluate('z.real * z.real + z.imag * z.imag < 4.0')
 		output[small] = n
-		z[small] = z[small] * z[small] + c[small]
+		z = numexpr.evaluate('where(small, z * z + c, z)')
 	output[output == max_iter - 1] = 0
 	return output
 
@@ -93,22 +104,24 @@ def handleKeyDown(key):
 	elif key == pygame.K_PAGEDOWN:
 		max_iter = round(max_iter / 1.5)
 	elif key == pygame.K_UP:
-		move = 0.2 / zoom
-		coord_set['y1'] += move
-		coord_set['y2'] += move
-	elif key == pygame.K_DOWN:
-		move = 0.2 / zoom
+		move = 0.2
 		coord_set['y1'] -= move
 		coord_set['y2'] -= move
+	elif key == pygame.K_DOWN:
+		move = 0.2
+		coord_set['y1'] += move
+		coord_set['y2'] += move
 	elif key == pygame.K_LEFT:
-		move = 0.25 / zoom
-		coord_set['x1'] += move
-		coord_set['x2'] += move
-	elif key == pygame.K_RIGHT:
-		move = 0.25 / zoom
+		move = 0.25
 		coord_set['x1'] -= move
 		coord_set['x2'] -= move
+	elif key == pygame.K_RIGHT:
+		move = 0.25
+		coord_set['x1'] += move
+		coord_set['x2'] += move
 
+	print('max_iter', max_iter)
+	print('coord_set', coord_set)
 	draw()
 
 def handleMouse(button):
