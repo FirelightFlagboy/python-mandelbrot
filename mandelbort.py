@@ -1,6 +1,7 @@
 import pygame
 from display import Display
 from time import process_time
+import numpy
 from numba import jit
 
 # windows parameters
@@ -32,37 +33,34 @@ coord_set['heigth'] = coord_set['y2'] - coord_set['y1']
 
 display = Display(WIDTH, HEIGTH)
 
+@jit
+def mandelbrot_cal(z):
+	# is an array
+	c = z
+	for n in range(max_iter):
+		sqrZ = z * z
+		if sqrZ > 4:
+			return n
+		z = sqrZ + c
+	return 0
 
-def getIter(x, y):
-	Cr = coord_set['width'] * x / WIDTH + coord_set['x1']
-	Ci = coord_set['heigth'] * y / HEIGTH + coord_set['y1']
-
-	real, img, Tr, Ti = Cr, Ci, 0.0, 0.0
-	for i in range(max_iter):
-		Tr = real * real
-		Ti = img * img
-		if Tr + Ti > INFINI:
-			break
-		img, real = 2.0 * real * img + Ci, Tr - Ti + Cr
-	return (i)
-
+@jit
+def mandelbrot(xMin, xMax, yMin, yMax):
+	x_line = numpy.linspace(xMin, xMax, WIDTH, dtype=numpy.float64)
+	y_line = numpy.linspace(yMin, yMax, HEIGTH, dtype=numpy.float64)
+	pxa = numpy.empty((WIDTH, HEIGTH))
+	for i in range(WIDTH):
+		for j in range(HEIGTH):
+			pxa[i, j] = mandelbrot_cal(x_line[i] + 1j * y_line[j])
+	return x_line, y_line, pxa
 
 def draw():
 
-	ar = display.getPixelArray()
 	start = process_time()
-	for c in range(HEIGTH):
-		for r in range(WIDTH):
-			iteration = getIter(r, c)
-			if iteration is max_iter:
-				ar[r, c] = 0xffffff
-			else:
-				ar[r, c] = 0, 0, 255 - (iteration / max_iter) * 255
-		print('\r', round(c * 100 / HEIGTH), '%', end='')
+	_, _, arMap = mandelbrot(coord_set['x1'], coord_set['x2'], coord_set['y1'], coord_set['y2'])
 	end = process_time()
-	print('\r', round(c * 100 / HEIGTH), '%\tdone in ', end - start)
-
-	del ar
+	print('done in ', end - start)
+	display.setSurface(pygame.surfarray.make_surface(arMap))
 
 	display.blitSurface()
 
@@ -131,8 +129,6 @@ def eventHandler(type_event, event):
 		handleMouse(event.button)
 
 def main():
-
-	display.initSurface()
 
 	draw()
 
